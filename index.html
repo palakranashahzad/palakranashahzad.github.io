@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Second Skeleton — Understanding FOP</title>
+<meta name="description" content="An awareness project on Fibrodysplasia Ossificans Progressiva (FOP) — the signs, the science, and why early recognition saves mobility. Based on published research by Palak Rana Shahzad.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#181b19;
+    --bone:#efeae0;
+    --bone-dim:#dcd6c7;
+    --teal:#3f6b64;
+    --teal-bright:#5c8f86;
+    --rust:#a8542e;
+    --slate:#6b6f6a;
+    --line: rgba(239,234,224,0.14);
+    --line-dark: rgba(24,27,25,0.12);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bone);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    letter-spacing:-0.01em;
+    line-height:1.08;
+  }
+  .mono{
+    font-family:'JetBrains Mono',monospace;
+    letter-spacing:0.02em;
+  }
+  a{color:inherit;}
+  img{max-width:100%; display:block;}
+  .wrap{max-width:1080px; margin:0 auto; padding:0 28px;}
+  nav{
+    position:sticky; top:0; z-index:50;
+    background:rgba(239,234,224,0.92);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line-dark);
+  }
+  nav .wrap{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 28px;
+  }
+  .brand{
+    font-family:'Fraunces',serif; font-weight:600; font-size:1.05rem;
+    display:flex; align-items:center; gap:10px;
+  }
+  .brand .dot{width:8px;height:8px;border-radius:50%;background:var(--rust);}
+  .navlinks{display:flex; gap:28px; font-size:0.92rem;}
+  .navlinks a{text-decoration:none; opacity:0.75; transition:opacity .15s;}
+  .navlinks a:hover{opacity:1;}
+  header.hero{
+    background:var(--ink);
+    color:var(--bone);
+    padding:96px 0 72px;
+    position:relative;
+    overflow:hidden;
+  }
+  header.hero .wrap{position:relative; z-index:2;}
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:0.78rem;
+    text-transform:uppercase;
+    letter-spacing:0.14em;
+    color:var(--teal-bright);
+    margin-bottom:22px;
+  }
+  h1.title{
+    font-size:clamp(2.2rem, 5.5vw, 4rem);
+    max-width:14ch;
+    margin-bottom:28px;
+  }
+  .hero-sub{
+    max-width:52ch;
+    font-size:1.08rem;
+    color:var(--bone-dim);
+    margin-bottom:44px;
+  }
+  .stat-row{
+    display:flex; gap:48px; flex-wrap:wrap;
+    padding-top:36px;
+    border-top:1px solid var(--line);
+  }
+  .stat{max-width:220px;}
+  .stat .num{
+    font-family:'Fraunces',serif; font-weight:600;
+    font-size:2.2rem; color:var(--bone);
+    display:block;
+  }
+  .stat .label{
+    font-size:0.85rem; color:var(--bone-dim); margin-top:4px;
+  }
+  .cta-row{display:flex; gap:14px; margin-top:40px; flex-wrap:wrap;}
+  .btn{
+    display:inline-block;
+    padding:13px 24px;
+    font-size:0.92rem;
+    font-weight:600;
+    text-decoration:none;
+    border-radius:2px;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .btn-primary{background:var(--teal-bright); color:var(--ink);}
+  .btn-primary:hover{background:#74a89e; transform:translateY(-1px);}
+  .btn-ghost{border:1px solid var(--line); color:var(--bone);}
+  .btn-ghost:hover{border-color:var(--bone);}
+  .joint-wrap{
+    position:absolute; right:-40px; top:50%; transform:translateY(-50%);
+    width:340px; height:340px; opacity:0.9;
+    z-index:1;
+  }
+  @media (max-width:860px){ .joint-wrap{display:none;} }
+  section{padding:88px 0;}
+  section.alt{background:#e6e0d2;}
+  .section-head{max-width:640px; margin-bottom:48px;}
+  .kicker{
+    font-family:'JetBrains Mono',monospace;
+    font-size:0.76rem; text-transform:uppercase; letter-spacing:0.14em;
+    color:var(--teal); margin-bottom:14px; display:block;
+  }
+  h2{font-size:clamp(1.6rem,3.2vw,2.3rem); margin-bottom:16px;}
+  .lead{font-size:1.05rem; color:#3a3d3a; max-width:60ch;}
+  .split{display:grid; grid-template-columns:1fr 1fr; gap:56px; align-items:start;}
+  @media (max-width:800px){.split{grid-template-columns:1fr;}}
+  .split p{margin-bottom:16px; color:#333630;}
+  .callout{
+    background:var(--ink); color:var(--bone);
+    padding:28px 26px; border-left:3px solid var(--rust);
+  }
+  .callout p{color:var(--bone-dim); font-size:0.95rem; margin:0;}
+  .callout .cite{
+    font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:var(--teal-bright);
+    margin-top:14px; display:block;
+  }
+  .signs-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line-dark); border:1px solid var(--line-dark);}
+  @media (max-width:800px){.signs-grid{grid-template-columns:1fr;}}
+  .sign-card{background:var(--bone); padding:32px 28px;}
+  .sign-card .n{
+    font-family:'JetBrains Mono',monospace; color:var(--rust); font-size:0.85rem; margin-bottom:14px; display:block;
+  }
+  .sign-card h3{font-size:1.15rem; margin-bottom:10px; font-weight:600;}
+  .sign-card p{font-size:0.92rem; color:#4a4d47;}
+  .delay-block{display:flex; gap:48px; align-items:center; flex-wrap:wrap;}
+  .delay-visual{flex:1; min-width:260px;}
+  .delay-track{
+    height:14px; background:var(--line-dark); border-radius:8px; overflow:hidden; margin-bottom:10px;
+  }
+  .delay-fill{
+    height:100%; width:0%; background:linear-gradient(90deg,var(--teal),var(--rust));
+    transition:width 1.4s cubic-bezier(.2,.8,.2,1);
+  }
+  .delay-labels{display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:var(--slate);}
+  .delay-text{flex:1; min-width:260px;}
+  .timeline{border-left:2px solid var(--line-dark); padding-left:28px; margin-left:6px;}
+  .tl-item{position:relative; padding-bottom:36px;}
+  .tl-item:last-child{padding-bottom:0;}
+  .tl-item::before{
+    content:''; position:absolute; left:-34px; top:4px;
+    width:11px; height:11px; border-radius:50%; background:var(--teal); border:2px solid var(--bone);
+  }
+  .tl-year{font-family:'JetBrains Mono',monospace; font-size:0.8rem; color:var(--teal); margin-bottom:6px; display:block;}
+  .tl-item h3{font-size:1.1rem; margin-bottom:6px;}
+  .tl-item p{font-size:0.93rem; color:#4a4d47; max-width:56ch;}
+  .paper-card{
+    background:var(--ink); color:var(--bone);
+    padding:44px 40px; display:grid; grid-template-columns:auto 1fr; gap:32px; align-items:center;
+  }
+  @media (max-width:700px){.paper-card{grid-template-columns:1fr;}}
+  .paper-mark{
+    width:64px; height:64px; border:2px solid var(--teal-bright); border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces',serif; font-size:1.4rem; color:var(--teal-bright);
+  }
+  .paper-card h3{font-size:1.35rem; margin-bottom:8px; color:var(--bone);}
+  .paper-card .byline{font-size:0.88rem; color:var(--bone-dim); margin-bottom:14px;}
+  .paper-card p{color:var(--bone-dim); font-size:0.95rem; margin-bottom:18px; max-width:60ch;}
+  .involve-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:28px;}
+  @media (max-width:800px){.involve-grid{grid-template-columns:1fr;}}
+  .involve-card{padding:28px; border:1px solid var(--line-dark); background:var(--bone);}
+  .involve-card h3{font-size:1.05rem; margin-bottom:10px;}
+  .involve-card p{font-size:0.9rem; color:#4a4d47; margin-bottom:16px;}
+  .involve-card a{font-size:0.88rem; font-weight:600; color:var(--teal); text-decoration:none;}
+  footer{background:var(--ink); color:var(--bone-dim); padding:56px 0 32px; font-size:0.85rem;}
+  footer .wrap{display:flex; justify-content:space-between; gap:32px; flex-wrap:wrap; border-bottom:1px solid var(--line); padding-bottom:32px; margin-bottom:24px;}
+  footer h4{color:var(--bone); font-size:0.85rem; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:14px; font-family:'JetBrains Mono',monospace;}
+  footer ol{padding-left:18px; color:var(--slate); font-size:0.78rem; line-height:1.8;}
+  .foot-bottom{font-size:0.78rem; color:var(--slate); text-align:center;}
+  ::selection{background:var(--rust); color:var(--bone);}
+  @media (prefers-reduced-motion: reduce){ * {transition:none !important; scroll-behavior:auto !important;} }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand"><span class="dot"></span>Second Skeleton</div>
+    <div class="navlinks">
+      <a href="#what-is-fop">What is FOP</a>
+      <a href="#signs">Signs</a>
+      <a href="#treatment">Treatment</a>
+      <a href="#paper">The Paper</a>
+      <a href="#involve">Get Involved</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Fibrodysplasia Ossificans Progressiva</div>
+    <h1 class="title">Some diseases don't announce themselves. This one builds a second skeleton in silence.</h1>
+    <p class="hero-sub">FOP turns muscle, tendon, and ligament into bone — quietly, permanently, one flare-up at a time. Most doctors will never see a case. That's exactly why awareness, not just medicine, is what protects the people who have it.</p>
+    <div class="cta-row">
+      <a href="#signs" class="btn btn-primary">Learn the early signs</a>
+      <a href="#paper" class="btn btn-ghost">Read the research</a>
+    </div>
+    <div class="stat-row">
+      <div class="stat"><span class="num mono">1 / 2,000,000</span><span class="label">estimated global prevalence</span></div>
+      <div class="stat"><span class="num mono">4–5 yrs</span><span class="label">average diagnostic delay</span></div>
+      <div class="stat"><span class="num mono">2023</span><span class="label">first-ever FDA approved treatment</span></div>
+    </div>
+  </div>
+  <svg class="joint-wrap" viewBox="0 0 300 300" fill="none">
+    <circle cx="150" cy="150" r="120" stroke="#3f6b64" stroke-opacity="0.35" stroke-width="1"/>
+    <circle cx="150" cy="150" r="85" stroke="#efeae0" stroke-opacity="0.15" stroke-width="1"/>
+    <path d="M100 190 Q100 140 130 120 Q160 100 150 70" stroke="#efeae0" stroke-width="2" stroke-opacity="0.5" fill="none"/>
+    <path d="M100 190 Q100 140 130 120 Q160 100 150 70" stroke="#a8542e" stroke-width="6" stroke-linecap="round" stroke-opacity="0.7" fill="none" stroke-dasharray="4 10"/>
+    <circle cx="100" cy="190" r="5" fill="#efeae0" fill-opacity="0.7"/>
+    <circle cx="130" cy="120" r="5" fill="#efeae0" fill-opacity="0.7"/>
+    <circle cx="150" cy="70" r="5" fill="#efeae0" fill-opacity="0.7"/>
+  </svg>
+</header>
+
+<section id="what-is-fop">
+  <div class="wrap split">
+    <div>
+      <span class="kicker">The Biology</span>
+      <h2>A gene that never learns to stop</h2>
+      <p>FOP is caused by a single misfire in a gene called <strong>ACVR1</strong> — the gene responsible for telling the body where and when to build bone. In someone with FOP, that switch is stuck on. The body keeps receiving a signal to grow bone in places it never should: inside muscles, tendons, and ligaments.</p>
+      <p>Over years, this forms what patients and researchers call a "second skeleton" — bridges of bone growing across joints, slowly fusing the body into a fixed position. There is currently no way to reverse bone that has already formed.</p>
+    </div>
+    <div class="callout">
+      <p>"FOP is not just rare — it is routinely misunderstood, misdiagnosed, and accidentally made worse by the very people trying to help."</p>
+      <span class="cite">— Palak Rana Shahzad, "When Flesh Turns into Bone," The HEART Venture, 2026</span>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="signs">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="kicker">Recognition Saves Mobility</span>
+      <h2>The signs doctors miss — and families can catch</h2>
+      <p class="lead">FOP leaves clues on the body from birth. Most are dismissed as minor. Knowing what to look for is currently one of the only tools available to prevent irreversible harm.</p>
+    </div>
+  </div>
+  <div class="signs-grid">
+    <div class="sign-card">
+      <span class="n mono">01</span>
+      <h3>The bent big toe</h3>
+      <p>Present at birth in nearly every FOP patient — the big toe is shorter than normal, often turned inward, sometimes missing a joint. It's the single most reliable early marker, and the most commonly dismissed.</p>
+    </div>
+    <div class="sign-card">
+      <span class="n mono">02</span>
+      <h3>Sudden soft-tissue swelling</h3>
+      <p>Painful, warm lumps that appear on the neck, shoulders, back, or upper arms — often after a minor bump or illness. They look and feel like tumors, which is exactly why they're so often misdiagnosed as cancer.</p>
+    </div>
+    <div class="sign-card">
+      <span class="n mono">03</span>
+      <h3>A biopsy makes it worse</h3>
+      <p>Cutting into a flare-up to test it doesn't diagnose FOP — it triggers new bone growth at the cut site. A joint that still moved before the procedure can be permanently locked afterward.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <span class="kicker">Why It Takes So Long</span>
+      <h2>Years lost to the wrong diagnosis</h2>
+    </div>
+    <div class="delay-block">
+      <div class="delay-visual">
+        <div class="delay-track"><div class="delay-fill" id="delayFill"></div></div>
+        <div class="delay-labels"><span>Birth</span><span>Correct diagnosis: 4–5 yrs later</span></div>
+      </div>
+      <div class="delay-text">
+        <p class="lead">FOP rarely appears in standard medical training. With roughly one diagnosed case per two million people, most physicians will never encounter it in their entire career — so the burden of recognition falls on families who've never heard of it either. Every year of delay is a year where flare-ups get mismanaged and mobility is lost for good.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="treatment">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="kicker">Where Medicine Stands Today</span>
+      <h2>There is still no cure. But there is, for the first time, a treatment.</h2>
+    </div>
+    <div class="timeline">
+      <div class="tl-item">
+        <span class="tl-year mono">Emergency response</span>
+        <h3>Corticosteroids, within 24 hours</h3>
+        <p>If given in the first day of a flare-up, steroids can reduce swelling and limit bone formation — but most patients are undiagnosed and miss this window entirely.</p>
+      </div>
+      <div class="tl-item">
+        <span class="tl-year mono">What to avoid</span>
+        <h3>Surgery, biopsies, injections</h3>
+        <p>Any invasive procedure — even routine dental work — can trigger new, permanent bone growth at the site. Many patients lose mobility not from the disease alone, but from well-meaning treatment.</p>
+      </div>
+      <div class="tl-item">
+        <span class="tl-year mono">2022 – 2023</span>
+        <h3>Palovarotene (Sohonos) approved</h3>
+        <p>Approved by Health Canada in January 2022 and the FDA in August 2023, it's the first-ever authorized treatment for FOP. It doesn't cure the disease, but it slows new bone formation during flare-ups — the first real medical tool patients have had.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="paper">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="kicker">The Research</span>
+      <h2>Read the full paper</h2>
+    </div>
+    <div class="paper-card">
+      <div class="paper-mark">FOP</div>
+      <div>
+        <h3>When Flesh Turns into Bone: A guide to recognizing early FOP symptoms and preventing medical misdiagnosis</h3>
+        <div class="byline mono">By Palak Rana Shahzad — published in The HEART Venture, July 2026</div>
+        <p>This site is built on my published research paper, which looks at the biology of FOP, why it's so often misdiagnosed, and why public awareness — not just medicine — is currently the most powerful tool available to protect patients.</p>
+        <a href="https://theheartventure.wordpress.com/2026/07/11/when-flesh-turns-into-bone-a-guide-to-recognizing-early-fop-symptoms-and-preventing-medical-misdiagnosis/" class="btn btn-primary" target="_blank" rel="noopener">Read on The HEART Venture →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="involve">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="kicker">Help Spread It</span>
+      <h2>Awareness is the only thing that scales this</h2>
+      <p class="lead">A parent who recognizes a bent toe at birth. A teacher who flags an unusual lump. That's the whole intervention. It costs nothing but the right information reaching the right person in time.</p>
+    </div>
+    <div class="involve-grid">
+      <div class="involve-card">
+        <h3>Share this page</h3>
+        <p>Send it to a parent, teacher, or med student. Most people — including most doctors — will be learning about FOP for the first time.</p>
+        <a href="#top">Copy the link ↗</a>
+      </div>
+      <div class="involve-card">
+        <h3>Follow the project</h3>
+        <p>I'm posting updates on FOP research and rare-disease awareness as I keep working on this.</p>
+        <a href="#">[ your Instagram / X handle ]</a>
+      </div>
+      <div class="involve-card">
+        <h3>Get in touch</h3>
+        <p>Researcher, educator, or FOP family with something to share? I'd like to hear from you.</p>
+        <a href="mailto:youremail@example.com">[ your email ]</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div style="max-width:320px;">
+      <div class="brand" style="color:var(--bone); margin-bottom:14px;"><span class="dot"></span>Second Skeleton</div>
+      <p style="color:var(--slate); font-size:0.85rem;">An awareness project on Fibrodysplasia Ossificans Progressiva, built around independently published research.</p>
+    </div>
+    <div>
+      <h4>Works Cited</h4>
+      <ol>
+        <li>Shore, E. M., et al. (2006). <em>Nature Genetics</em>, 38(5), 525–527.</li>
+        <li>Kaplan, F. S., et al. (2008). <em>Clinical Proceedings, ICC on FOP.</em></li>
+        <li>Pignolo, R. J., Shore, E. M., & Kaplan, F. S. (2011). <em>Orphanet J Rare Dis</em>, 6(80).</li>
+        <li>Glaser, D. L., et al. (2010). <em>Expert Opinion on Orphan Drugs.</em></li>
+        <li>Pignolo, R. J., et al. (2022). <em>Genetics in Medicine</em>, 24(12), 2422–2433.</li>
+        <li>International FOP Association. (2023). IFOPA.org.</li>
+        <li>Ipsen. (2023). FDA approval of Sohonos™ press release.</li>
+      </ol>
+    </div>
+  </div>
+  <div class="foot-bottom">Built by Palak Rana Shahzad · Based on research published in The HEART Venture, July 2026</div>
+</footer>
+
+<script>
+  const fill = document.getElementById('delayFill');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        fill.style.width = '82%';
+        observer.disconnect();
+      }
+    });
+  }, { threshold: 0.4 });
+  observer.observe(fill);
+</script>
+
+</body>
+</html>
